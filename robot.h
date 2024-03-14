@@ -29,9 +29,11 @@ struct Robot
     }
 };
 
-// 地图上的点
+// 地图上的货物点
 struct Point{
     int x, y, dis, money;
+    int goods2berth_dis = 10000;
+    int berth = -1;
     Point() {}
     Point(int startX, int startY) {
         x = startX;
@@ -45,6 +47,19 @@ struct Point{
     }
 };
 
+// 机器人移动
+struct Robot_ans{
+    int x, y, move;
+    int change = 0;
+    Robot_ans() {}
+    Robot_ans(int x1, int y1, int move1){
+        x = x1;
+        y = y1;
+        move = move1;
+    }
+};
+
+extern Robot robot[10 + 10];
 
 // 边界检测
 int check(int x, int y);
@@ -54,7 +69,17 @@ void Init_robot(Robot &x);
 string int_pad2str(int x);
 string int2str(int x, int y);
 // 计算初始时候的所有点到港口的距离
-int cal_dis(int x, int y, int ux, int uy);
+void cal_dis(int x, int y);
 void Init_map_dis();
+// 寻路系统-寻找货物路径
+Point bfs_find_goods(int x, int y, int robot_index, Point pre_bestPoint);
+// 寻路系统-寻找港口路径
+void bfs_find_berth(int x, int y, int ux, int uy, int robot_index);
+// 控制机器人
+void cal_robot();
+// 碰撞系统检测
+vector<Robot_ans> pz_judge(vector<Robot_ans> v);
+// 读取机器人状态
+void read_robot();
 
 #endif

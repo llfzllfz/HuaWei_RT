@@ -1,5 +1,9 @@
 #ifndef BERTH_H
 #define BERTH_H
+#include <bits/stdc++.h>
+using namespace std;
+
+
 
 extern const int berth_num;
 
@@ -10,6 +14,7 @@ struct Berth
     int loading_speed; //装载速度
     int goods_num; //港口货物量
     int efficiency; //单词满载运输的效率
+    int id; // 港口编号
     Berth(){}
     Berth(int x, int y, int transport_time, int loading_speed) {
         this -> x = x;
@@ -20,5 +25,8 @@ struct Berth
 };
 
 extern Berth berth[10 + 10];
+extern vector<Berth> robot_berth;
+void read_berth();
+// void cal_betch(int zhen, int tz, int boat_capacity);
 
 #endif

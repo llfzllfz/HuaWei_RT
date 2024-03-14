@@ -8,9 +8,9 @@ struct Boat
 {
     int num, pos, status; // 船上的货物数量，船的终点，船现在的状态。
     int berth;
+    int state;
 };
 
-
-
-
+void read_boat();
+extern Boat boat[5 + 5];
 #endif
