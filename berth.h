@@ -26,6 +26,7 @@ struct Berth
 
 extern Berth berth[10 + 10];
 extern vector<Berth> robot_berth;
+
 void read_berth();
 // void cal_betch(int zhen, int tz, int boat_capacity);
 

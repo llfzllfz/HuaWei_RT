@@ -74,12 +74,14 @@ void Init_map_dis();
 // 寻路系统-寻找货物路径
 Point bfs_find_goods(int x, int y, int robot_index, Point pre_bestPoint);
 // 寻路系统-寻找港口路径
-void bfs_find_berth(int x, int y, int ux, int uy, int robot_index);
+void bfs_find_berth(int x, int y, int ux, int uy, int robot_index, int zhen);
 // 控制机器人
-void cal_robot();
+void cal_robot(int zhen);
 // 碰撞系统检测
 vector<Robot_ans> pz_judge(vector<Robot_ans> v);
 // 读取机器人状态
 void read_robot();
+int check_berth(int x, int y);
+int find_nearst_berth(int x, int y, int robot_index);
 
 #endif

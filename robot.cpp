@@ -60,7 +60,9 @@ void Init_robot(Robot &x){
 
 // }
 
-Point bfs_find_goods(int x, int y, int robot_index){
+
+// 性价比最优，寻找货物系统
+Point bfs_find_goods(int x, int y, int robot_index, int zhen){
     memset(robot_visit_find_goods, 0, sizeof(robot_visit_find_goods));
     memset(fax_find_goods, -1, sizeof(fax_find_goods));
     memset(fay_find_goods, -1, sizeof(fay_find_goods));
@@ -69,7 +71,7 @@ Point bfs_find_goods(int x, int y, int robot_index){
     queue<Point> q;
     q.push(Point(x, y, 0, 0));
     robot_visit_find_goods[x][y] = 1;
-    
+
     // cerr << 6 << endl;
     while(!q.empty()){
         Point now = q.front();
@@ -83,6 +85,7 @@ Point bfs_find_goods(int x, int y, int robot_index){
             Point next = Point(next_x, next_y);
             next.dis = now.dis + 1;
             if(ch_copy[next_x][next_y] == 'g'){
+            	if(next.dis > (1000 - (zhen - goods_time_mp[int2str(next_x, next_y)] + 1))) continue;
                 int value = goods_value_mp[int2str(next_x, next_y)];
                 if(bestPoint.x == -1){
                 	for(int j = 0; j < robot_berth.size(); j++){
@@ -122,15 +125,11 @@ Point bfs_find_goods(int x, int y, int robot_index){
             famove_find_goods[next.x][next.y] = i;
         }
     }
-    // cerr << 5 << endl;
-    // cerr << "bestPoint.x " << bestPoint.x << ' ' << bestPoint.y << endl;
     if(bestPoint.x != -1){
         int now_x = fax_find_goods[bestPoint.x][bestPoint.y];
         int now_y = fay_find_goods[bestPoint.x][bestPoint.y];
         robot[robot_index].robot_find_goods_move.push(famove_find_goods[bestPoint.x][bestPoint.y]);
         while(now_x != x || now_y != y){
-        	// if(now_x != -1 && now_y != -1)
-        	// 	cerr << "path " << now_x << ' ' << now_y << ' ' << ch_copy[now_x][now_y] << ' ' << ch[now_x][now_y] << endl;
             int move = famove_find_goods[now_x][now_y];
             robot[robot_index].robot_find_goods_move.push(move);
             int now_xx = fax_find_goods[now_x][now_y];
@@ -143,12 +142,13 @@ Point bfs_find_goods(int x, int y, int robot_index){
             cerr << bestPoint.dis << ' ' << robot[robot_index].robot_find_goods_move.size() << endl;
         }
         robot[robot_index].berth = bestPoint.berth;
-        // cerr << bestPoint.berth << ' ' << bestPoint.money << ' ' << bestPoint.goods2berth_dis << endl;
     }
     return bestPoint;
 }
 
-void bfs_find_berth(int x, int y, int ux, int uy, int robot_index){
+
+// 寻找机器人到锁定港口的最优路径
+int bfs_find_berth(int x, int y, int ux, int uy, int robot_index){
     memset(robot_visit_find_berth, 0, sizeof(robot_visit_find_berth));
     memset(fax_find_berth, -1, sizeof(fax_find_berth));
     memset(fay_find_berth, -1, sizeof(fay_find_berth));
@@ -157,10 +157,12 @@ void bfs_find_berth(int x, int y, int ux, int uy, int robot_index){
     q.push(Point(x, y, 0, 0));
     robot_visit_find_berth[x][y] = 1;
     int best_dis = -1;
+    int path_connect = -1;
     while(!q.empty()){
         Point now = q.front();
         if(now.x == ux && now.y == uy) {
             best_dis = now.dis;
+            path_connect = 1;
             break;
         }
         q.pop();
@@ -192,49 +194,120 @@ void bfs_find_berth(int x, int y, int ux, int uy, int robot_index){
         cerr << "Not equal" << endl;
         cerr << best_dis << ' ' << robot[robot_index].robot_find_berth_move.size() << ' ' << ' ' << now_x << ' ' << now_y << endl;
     }
+    return path_connect;
+}
+
+
+int check_berth(int x, int y){
+	for(int i = 0; i < robot_berth.size(); i++){
+		int tmp_berth_idx = robot_berth[i].id;
+		int ux = berth[tmp_berth_idx].x;
+		int uy = berth[tmp_berth_idx].y;
+		if(x >= ux && y >= uy && x <= ux + 3 && y <= uy + 3) return tmp_berth_idx;
+	}
+	return -1;
+}
+
+// 寻找当前距离最近的开放港口
+int find_nearst_berth(int x, int y, int robot_index){
+	memset(robot_visit_find_berth, 0, sizeof(robot_visit_find_berth));
+    memset(fax_find_berth, -1, sizeof(fax_find_berth));
+    memset(fay_find_berth, -1, sizeof(fay_find_berth));
+    memset(famove_find_berth, -1, sizeof(famove_find_berth));
+    queue<Point>q;
+    q.push(Point(x, y, 0, 0));
+    robot_visit_find_berth[x][y] = 1;
+    int best_berth = -1;
+    int ux = -1;
+    int uy = -1;
+    while(!q.empty()){
+    	Point now = q.front();
+    	if(ch_copy[now.x][now.y] == 'B'){
+    		best_berth = check_berth(now.x, now.y);
+    		if(best_berth != -1) {
+    			ux = now.x;
+    			uy = now.y;
+    			break;
+    		}
+    	}
+    	q.pop();
+    	for(int i = 0; i < 4; i++){
+            int next_x = now.x + robot_move_x[i];
+            int next_y = now.y + robot_move_y[i];
+            if(check(next_x, next_y) == -1) continue;
+            if(robot_visit_find_berth[next_x][next_y] == 1) continue;
+            Point next = Point(next_x, next_y);
+            next.dis = now.dis + 1;
+            q.push(next);
+            robot_visit_find_berth[next.x][next.y] = 1;
+            fax_find_berth[next.x][next.y] = now.x;
+            fay_find_berth[next.x][next.y] = now.y;
+            famove_find_berth[next.x][next.y] = i;
+        }
+    }
+    int now_x = ux;
+    int now_y = uy;
+    while(best_berth != -1 && (now_x != -1  && now_y != -1) && (now_x != x || now_y != y)){
+        int move = famove_find_berth[now_x][now_y];
+        robot[robot_index].robot_find_berth_move.push(move);
+        int now_xx = fax_find_berth[now_x][now_y];
+        int now_yy = fay_find_berth[now_x][now_y];
+        now_x = now_xx;
+        now_y = now_yy;
+    }
+    // if(best_dis != robot[robot_index].robot_find_berth_move.size() && best_dis != -1){
+    //     cerr << "Not equal" << endl;
+    //     cerr << best_dis << ' ' << robot[robot_index].robot_find_berth_move.size() << ' ' << ' ' << now_x << ' ' << now_y << endl;
+    // }
+    return best_berth;
 }
 
 // 机器人管理
-void cal_robot(){
-	// cerr << 1 << endl;
+void cal_robot(int zhen){
     vector<Robot_ans> v;
     for(int i = 0; i < robot_num; i++){
         if(robot[i].status == 0) {
             v.push_back(Robot_ans(robot[i].x, robot[i].y, -1));
+            Init_robot(robot[i]);
             continue;
         }
         if(robot[i].goods == 0){
-        	// cerr << ' ' << i << ' ' << robot[i].robot_find_goods_move.size() << endl;
             if(!robot[i].robot_find_goods_move.empty()){
                 int move = robot[i].robot_find_goods_move.top();
                 v.push_back(Robot_ans(robot[i].x, robot[i].y, move));
             }
             else{
-                v.push_back(Robot_ans(robot[i].x, robot[i].y, -1));
                 Init_robot(robot[i]);
                 auto it = cp.find(i);
                 if(it != cp.end()) ch_copy[cp[i].x][cp[i].y] = ch[cp[i].x][cp[i].y];
-                Point bestPoint = bfs_find_goods(robot[i].x, robot[i].y, i);
+                Point bestPoint = bfs_find_goods(robot[i].x, robot[i].y, i, zhen);
                 if(bestPoint.x != -1){
 	                ch_copy[bestPoint.x][bestPoint.y] = char(i + '0');
 	                cp[i] = bestPoint;
                 }
+                if(!robot[i].robot_find_goods_move.empty())
+                	v.push_back(Robot_ans(robot[i].x, robot[i].y, robot[i].robot_find_goods_move.top()));
+                else
+                	v.push_back(Robot_ans(robot[i].x, robot[i].y, -1));
             }
         }
         else{
-        	// cerr << 3 << endl;
             if(!robot[i].robot_find_berth_move.empty()){
                 int move = robot[i].robot_find_berth_move.top();
                 v.push_back(Robot_ans(robot[i].x, robot[i].y, move));
             }
             else{
-                v.push_back(Robot_ans(robot[i].x, robot[i].y, -1));
                 Init_robot(robot[i]);
-                bfs_find_berth(robot[i].x, robot[i].y, berth[robot[i].berth].x, berth[robot[i].berth].y, i);
+                // int path_connected = bfs_find_berth(robot[i].x, robot[i].y, berth[robot[i].berth].x, berth[robot[i].berth].y, i);
+                int best_berth = find_nearst_berth(robot[i].x, robot[i].y, i);
+                // if // 如果当前港口堵塞，转移到另一个港口
+                if(!robot[i].robot_find_berth_move.empty())
+                	v.push_back(Robot_ans(robot[i].x, robot[i].y, robot[i].robot_find_berth_move.top()));
+                else
+                	v.push_back(Robot_ans(robot[i].x, robot[i].y, -1));
             }
         }
     }
-    // cerr << 2 << endl;
     vector<Robot_ans> ans = pz_judge(v);
     for(int i = 0; i < robot_num; i++){
         int move = ans[i].move;
@@ -249,14 +322,15 @@ void cal_robot(){
                 if(robot[i].goods == 0){
                     auto it = cp.find(i);
                     if(it != cp.end()) ch_copy[cp[i].x][cp[i].y] = ch[cp[i].x][cp[i].y];
-                    Point bestPoint = bfs_find_goods(robot[i].x, robot[i].y, i);
+                    Point bestPoint = bfs_find_goods(robot[i].x, robot[i].y, i, zhen);
                     if(bestPoint.x != -1){
 	                    ch_copy[bestPoint.x][bestPoint.y] = char(i + '0');
 	                    cp[i] = bestPoint;
                     }
                 }
                 else{
-                    bfs_find_berth(robot[i].x, robot[i].y, berth[i].x, berth[i].y, i);
+                    // bfs_find_berth(robot[i].x, robot[i].y, berth[robot[i].berth].x, berth[robot[i].berth].y, i);
+                    int best_berth = find_nearst_berth(robot[i].x, robot[i].y, i);
                 }
                 ch_copy[next_x][next_y] = ch[next_x][next_y];
                 ch_copy[ans[i].x][ans[i].y] = ch[ans[i].x][ans[i].y];
@@ -307,17 +381,31 @@ vector<Robot_ans> pz_judge(vector<Robot_ans> v){
         }
         int x1 = v[i].x + robot_move_x[v[i].move];
         int y1 = v[i].y + robot_move_y[v[i].move];
-        for(int j = i + 1; j < v.size(); j++){
+        for(int j = 0; j < v.size(); j++){
             if(v[j].move == -1) continue;
-            if(v[j].change != 0) continue;
+            if(i == j) continue;
+            // if(v[j].change != 0) continue;
             int x2 = v[j].x + robot_move_x[v[j].move];
             int y2 = v[j].y + robot_move_y[v[j].move];
+            // 机器人抢占同一个点, 机器人互换位置
             if((x1 == x2 && y1 == y2) || ((x1 == v[j].x && y1 == v[j].y) && (x2 == v[i].x && y2 == v[i].y))){
-                v[i].change = 1;
-                v[j].change = 2;
-                break;
+                if(v[i].change == 0) v[i].change = 1;
+                if(v[j].change == 0) v[j].change = 2;
+                // break;
             }
         }
+    }
+    for(int i = 0; i < v.size(); i++){
+    	if(v[i].move == -1) continue;
+    	int x1 = v[i].x + robot_move_x[v[i].move];
+        int y1 = v[i].y + robot_move_y[v[i].move];
+    	for(int j = 0; j < v.size(); j++){
+    		if(i == j) continue;
+	    	if(x1 == v[j].x && y1 == v[j].y && (v[j].move == -1 || v[j].change != 0)){
+	    		if(v[i].change == 0) v[i].change = 1;
+	            // break;
+	    	}
+	    }
     }
     return v;
 }
@@ -357,17 +445,6 @@ void Init_map_dis(){
 			}
 		}
 	}
-
-
-	// for(int i = 0; i < N; i++){
-	// 	for(int j = 0; j < N; j++){
-	// 		for(int k = 0; k < berth_num; k++){
-	// 			cerr << i << ' ' << j << ' ' << k << endl;
-	// 			int dis = cal_dis(i, j, berth[k].x, berth[k].y);
-	// 			map_dis[i][j][k] = dis;
-	// 		}
-	// 	}
-	// }
 }
 
 

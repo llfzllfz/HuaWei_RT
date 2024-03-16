@@ -4,6 +4,7 @@
 char ch[200][200];
 char ch_copy[200][200];
 unordered_map<string, int> goods_value_mp;
+unordered_map<string, int> goods_time_mp;
 
 
 void read_map(){

@@ -59,6 +59,7 @@ int Input()
         goods.push_back(Goods(x, y, val, id));
         ch_copy[x][y] = 'g';
         goods_value_mp[int2str(x, y)] = val;
+        goods_time_mp[int2str(x, y)] = id;
     }
     read_robot();
     read_boat();
@@ -113,7 +114,6 @@ void Init__(){
         robot[i + 5].berth = i;
         boat[i].state = i;
     }
-
 }
 
 void cal_betch(int zhen, int tz, int boat_capacity){
@@ -152,7 +152,7 @@ int main()
         Synchronize(id);
         // cerr << id << endl;
         if(id > 15000) break;
-        cal_robot();
+        cal_robot(id);
         cal_betch(id, id - zhen, boat_capacity);
 
         // for(int i = 0; i < robot_num; i ++)
