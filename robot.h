@@ -3,36 +3,19 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-
 extern const int N;
 extern const int berth_num;
 extern const int robot_num;
 
-
-
 extern char ch[][200];
 extern char ch_copy[][200];
 
-// 机器人
-struct Robot
-{
-    int x, y, goods; // x, y 坐标，goods 是否携带货物
-    int status;  // 机器人状态
-    int berth=-1; // 当前机器人负责的港口
-    int dis; // 距离
-    stack<int> robot_find_goods_move; // 到货物的移动路径
-    stack<int> robot_find_berth_move; // 到港口的移动路径
-    Robot() {}
-    Robot(int startX, int startY) {
-        x = startX;
-        y = startY;
-    }
-};
 
 // 地图上的货物点
 struct Point{
     int x, y, dis, money;
     int goods2berth_dis = 10000;
+    int pre_dis;
     int berth = -1;
     Point() {}
     Point(int startX, int startY) {
@@ -44,6 +27,30 @@ struct Point{
         y = startY;
         money = startmoney;
         dis = startdis;
+    }
+};
+
+// 机器人
+struct Robot
+{
+    int x, y, goods; // x, y 坐标，goods 是否携带货物
+    int goods_x, goods_y; // 锁定货物的坐标
+    int status;  // 机器人状态
+    int berth=-1; // 当前机器人负责的港口
+    int dis; // 距离
+    int goods_values; //携带的货物价值
+    stack<int> robot_find_goods_move; // 到货物的移动路径
+    stack<int> robot_find_berth_move; // 到港口的移动路径
+    // stack<Point> best_goods; //最优的十个货物选择
+    vector<Point> best_goods;
+    int robot_visit_find_goods[200+1][200+1];
+    int fax_find_goods[200][200];
+    int fay_find_goods[200][200];
+    int famove_find_goods[200][200];
+    Robot() {}
+    Robot(int startX, int startY) {
+        x = startX;
+        y = startY;
     }
 };
 
@@ -72,7 +79,7 @@ string int2str(int x, int y);
 void cal_dis(int x, int y);
 void Init_map_dis();
 // 寻路系统-寻找货物路径
-Point bfs_find_goods(int x, int y, int robot_index, Point pre_bestPoint);
+void bfs_find_goods(int robot_index, int zhen, float pow_index);
 // 寻路系统-寻找港口路径
 void bfs_find_berth(int x, int y, int ux, int uy, int robot_index, int zhen);
 // 控制机器人
@@ -83,5 +90,8 @@ vector<Robot_ans> pz_judge(vector<Robot_ans> v);
 void read_robot();
 int check_berth(int x, int y);
 int find_nearst_berth(int x, int y, int robot_index);
+int select2best_point(Point x1, Point x2, float pow_index);
+int sort_best_goods(Point x1, Point x2);
+int find_pzset_move(vector<int> pz_set, int x, int y, int ux, int uy);
 
 #endif
