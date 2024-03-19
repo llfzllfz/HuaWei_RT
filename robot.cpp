@@ -336,9 +336,9 @@ void cal_robot(int zhen){
     }
 }
 
-int find_pzset_move(vector<int> pz_set, int x, int y, int ux, int uy){
-    int dx = (ux - x) == 0 ? ((ux - x) > 0 ? 1 : -1) : 0;
-    int dy = (uy - y) == 0 ? ((uy - y) > 0 ? 1 : -1) : 0;
+int find_pzset_move(vector<int> pz_set, vector<string> pz_v, int x, int y, int ux, int uy){
+    int dx = (ux - x) == 0 ? 0 : ((ux - x) > 0 ? 1 : -1);
+    int dy = (uy - y) == 0 ? 0 : ((uy - y) > 0 ? 1 : -1);
     int move = -1;
     for(int i = 0; i < 4; i++){
         if(robot_move_x[i] == dx || robot_move_y[i] == dy){
@@ -347,6 +347,8 @@ int find_pzset_move(vector<int> pz_set, int x, int y, int ux, int uy){
             int next_x = x + robot_move_x[i];
             int next_y = y + robot_move_y[i];
             if(check(next_x, next_y) == -1) {pz_set.push_back(i); continue;}
+            auto itt = find(pz_v.begin(), pz_v.end(), int2str(next_x, next_y));
+            if(itt != pz_v.end()) {pz_set.push_back(i); continue;}
             move = i;
         }
     }
@@ -354,6 +356,11 @@ int find_pzset_move(vector<int> pz_set, int x, int y, int ux, int uy){
     for(int i = 0; i < 4; i++){
         auto it = find(pz_set.begin(), pz_set.end(), i);
         if(it != pz_set.end()) continue;
+        int next_x = x + robot_move_x[i];
+        int next_y = y + robot_move_y[i];
+        if(check(next_x, next_y) == -1) {pz_set.push_back(i); continue;}
+        auto itt = find(pz_v.begin(), pz_v.end(), int2str(next_x, next_y));
+        if(itt != pz_v.end()) {pz_set.push_back(i); continue;}
         move = i;
     }
     return move;
@@ -377,14 +384,14 @@ vector<Robot_ans> pz_judge(vector<Robot_ans> v){
                 if(robot[i].goods == 0){
                     int ux = robot[i].best_goods[0].x;
                     int uy = robot[i].best_goods[0].y;
-                    int move = find_pzset_move(pz_set, v[i].x, v[i].y, ux, uy);
+                    int move = find_pzset_move(pz_set, pz_v, v[i].x, v[i].y, ux, uy);
                     v[i].move = move;
                 }
                 else{
                     int tmp_berth = robot[i].berth;
                     int ux = berth[tmp_berth].x;
                     int uy = berth[tmp_berth].y;
-                    int move = find_pzset_move(pz_set, v[i].x, v[i].y, ux, uy);
+                    int move = find_pzset_move(pz_set, pz_v, v[i].x, v[i].y, ux, uy);
                     v[i].move = move;
                 }
                 break;

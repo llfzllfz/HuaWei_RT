@@ -92,6 +92,6 @@ int check_berth(int x, int y);
 int find_nearst_berth(int x, int y, int robot_index);
 int select2best_point(Point x1, Point x2, float pow_index);
 int sort_best_goods(Point x1, Point x2);
-int find_pzset_move(vector<int> pz_set, int x, int y, int ux, int uy);
+int find_pzset_move(vector<int> pz_set, vector<string> pz_v, int x, int y, int ux, int uy);
 
 #endif
