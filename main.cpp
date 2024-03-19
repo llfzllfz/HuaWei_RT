@@ -34,7 +34,7 @@ void Init()
 {
     read_map();
     read_berth();
-    for(int i = 0; i < berth_num; i++) robot_berth.push_back(berth[i % 5]);
+    for(int i = 0; i < berth_num; i++) robot_berth.push_back(berth[i]);
     
     scanf("%d", &boat_capacity);
     char okk[100];
@@ -56,8 +56,10 @@ int Input()
     {
         int x, y, val;
         scanf("%d%d%d", &x, &y, &val);
+        // cerr << x << ' ' << y << ' ' << val << endl;
         goods.push_back(Goods(x, y, val, id));
         ch_copy[x][y] = 'g';
+        ch_goods[x][y] = 'g';
         goods_value_mp[int2str(x, y)] = val;
         goods_time_mp[int2str(x, y)] = id;
     }
@@ -72,6 +74,7 @@ int Input()
 void Synchronize(int zhen){
     while(goods_vector_index < goods.size() and goods[goods_vector_index].time - zhen + 1 > 1000){
         ch_copy[goods[goods_vector_index].x][goods[goods_vector_index].y] = ch[goods[goods_vector_index].x][goods[goods_vector_index].y];
+        ch_goods[goods[goods_vector_index].x][goods[goods_vector_index].y] = ch[goods[goods_vector_index].x][goods[goods_vector_index].y];
         goods_value_mp.erase(int2str(goods[goods_vector_index].x, goods[goods_vector_index].y));
         goods_vector_index++;
     }
@@ -83,7 +86,7 @@ void Init_(){
         robot[i].berth = i;
     }
     for(int i = 0; i < berth_num; i++){
-        berth[i].efficiency = berth[i].transport_time + boat_capacity / berth[i].loading_speed;
+        berth[i].efficiency = berth[i].transport_time * 2 + boat_capacity / berth[i].loading_speed;
     }
 }
 
@@ -154,6 +157,11 @@ int main()
         if(id > 15000) break;
         cal_robot(id);
         cal_betch(id, id - zhen, boat_capacity);
+        int berth_all_values = 0;
+        for(int i = 0; i < berth_num; i++){
+            berth_all_values += berth[i].goods_values;
+        }
+        cerr << "berth goods value: " << berth_all_values << endl;
 
         // for(int i = 0; i < robot_num; i ++)
         //     printf("move %d %d\n", i, rand() % 4);

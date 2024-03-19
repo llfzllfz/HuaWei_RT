@@ -15,6 +15,7 @@ struct Berth
     int goods_num; //港口货物量
     int efficiency; //单词满载运输的效率
     int id; // 港口编号
+    int goods_values;
     Berth(){}
     Berth(int x, int y, int transport_time, int loading_speed) {
         this -> x = x;
