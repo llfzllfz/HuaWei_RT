@@ -79,7 +79,7 @@ string int2str(int x, int y);
 void cal_dis(int x, int y);
 void Init_map_dis();
 // 寻路系统-寻找货物路径
-void bfs_find_goods(int robot_index, int zhen, float pow_index);
+void bfs_find_goods(int robot_index, int zhen, double pow_index);
 // 寻路系统-寻找港口路径
 void bfs_find_berth(int x, int y, int ux, int uy, int robot_index, int zhen);
 // 控制机器人
@@ -90,8 +90,9 @@ vector<Robot_ans> pz_judge(vector<Robot_ans> v);
 void read_robot();
 int check_berth(int x, int y);
 int find_nearst_berth(int x, int y, int robot_index);
-int select2best_point(Point x1, Point x2, float pow_index);
+int select2best_point(Point x1, Point x2, double pow_index);
 int sort_best_goods(Point x1, Point x2);
 int find_pzset_move(vector<int> pz_set, vector<string> pz_v, int x, int y, int ux, int uy);
+double xjb_func(Point x1);
 
 #endif

@@ -24,10 +24,11 @@ unordered_map<int, Point> cp;
 // 初始化到港口距离参数
 int Init_bfs_vist[200][200];
 int map_dis[200][200][10];
-float pow_index_base = 1;
+double pow_index_base = 1.0;
 int extra_dis = 0;
-float g2b_alpha = 0;
-float b2g_alpha = 0;
+double g2b_alpha = 0;
+double b2g_alpha = 0;
+vector<double> containers;
 mt19937 g_rand(2024);
 vector<int> move_v;
 
@@ -63,7 +64,7 @@ void Init_robot(Robot &x){
     x.best_goods.clear();
 }
 
-void bfs_find_goods(int robot_index, int zhen, float pow_index){
+void bfs_find_goods(int robot_index, int zhen, double pow_index){
     int x = robot[robot_index].x;
     int y = robot[robot_index].y;
     memset(robot[robot_index].robot_visit_find_goods, 0, sizeof(robot[robot_index].robot_visit_find_goods));
@@ -110,7 +111,8 @@ void bfs_find_goods(int robot_index, int zhen, float pow_index){
                             bestPoint.pre_dis = robot[robot_index].dis;
                         }
                     }
-                    robot[robot_index].best_goods.push_back(bestPoint);
+                    if(double(bestPoint.dis + bestPoint.pre_dis) < containers[robot_index] * double(bestPoint.goods2berth_dis))
+                        robot[robot_index].best_goods.push_back(bestPoint);
                 }
                 if(bestPoint.x == -1) continue;
                 bestPoint.x = -1;
@@ -181,27 +183,42 @@ int find_nearst_berth(int x, int y, int robot_index){
     return best_berth;
 }
 
-int select2best_point(Point x1, Point x2, float pow_index){
+int select2best_point(Point x1, Point x2, double pow_index){
     if(x1.x == x2.x && x1.y == x2.y){
         int x1_dis = x1.dis + x1.goods2berth_dis + x1.pre_dis + extra_dis;
         int x2_dis = x2.dis + x2.goods2berth_dis + x2.pre_dis + extra_dis;
         int x1_value = goods_value_mp[int2str(x1.x, x1.y)];
         int x2_value = goods_value_mp[int2str(x2.x, x2.y)];
-        if(pow(float(x1_value), pow_index) / float(x1_dis) + g2b_alpha * x1.goods2berth_dis - b2g_alpha * (x1.dis + x1.pre_dis) < pow(float(x2_value), pow_index) / float(x2_dis) + g2b_alpha * x2.goods2berth_dis - b2g_alpha * (x2.dis + x2.pre_dis)){
-            return 1;
-        }
+        // if(pow(double(x1_value), pow_index) / double(x1_dis) + g2b_alpha * x1.goods2berth_dis - b2g_alpha * (x1.dis + x1.pre_dis) < pow(double(x2_value), pow_index) / double(x2_dis) + g2b_alpha * x2.goods2berth_dis - b2g_alpha * (x2.dis + x2.pre_dis)){
+        //     return 1;
+        // }
+        if(xjb_func(x1) < xjb_func(x2)) return 1;
         else return 2;
     }
     return 0;
 }
 
 int sort_best_goods(Point x1, Point x2){
-    int x1_dis = x1.dis + x1.goods2berth_dis + x1.pre_dis + extra_dis;
-    int x2_dis = x2.dis + x2.goods2berth_dis + x2.pre_dis + extra_dis;
-    int x1_value = goods_value_mp[int2str(x1.x, x1.y)];
-    int x2_value = goods_value_mp[int2str(x2.x, x2.y)];
-    float pow_index = pow_index_base;
-    return pow(float(x1_value), pow_index) / float(x1_dis) + g2b_alpha * x1.goods2berth_dis - b2g_alpha * (x1.dis + x1.pre_dis) > pow(float(x2_value), pow_index) / float(x2_dis) + g2b_alpha * x2.goods2berth_dis - b2g_alpha * (x2.dis + x2.pre_dis);
+    return xjb_func(x1) > xjb_func(x2);
+    // int x1_dis = x1.dis + x1.goods2berth_dis + x1.pre_dis + extra_dis;
+    // int x2_dis = x2.dis + x2.goods2berth_dis + x2.pre_dis + extra_dis;
+    // int x1_value = goods_value_mp[int2str(x1.x, x1.y)];
+    // int x2_value = goods_value_mp[int2str(x2.x, x2.y)];
+    // double pow_index = pow_index_base;
+    // return pow(double(x1_value), pow_index) / double(x1_dis) + g2b_alpha * x1.goods2berth_dis - b2g_alpha * (x1.dis + x1.pre_dis) > pow(double(x2_value), pow_index) / double(x2_dis) + g2b_alpha * x2.goods2berth_dis - b2g_alpha * (x2.dis + x2.pre_dis);
+}
+
+double xjb_func(Point x1){
+    int g2b = x1.goods2berth_dis;
+    int r2g = x1.dis + x1.pre_dis;
+    int value = goods_value_mp[int2str(x1.x, x1.y)];
+    double pow_index = pow_index_base;
+    // double alpha = max(1.0, (r2g - g2b) / double(r2g));
+    // return pow(double(value), pow_index) / double(r2g + g2b) * (1 - alpha);
+    // return pow(double(value), pow_index) / double(r2g + g2b) + g2b_alpha * g2b;
+    // cerr << goods_density[x1.x][x1.y] <<  ' ' << goods.size() - goods_vector_index << endl;
+    return pow(double(value), pow_index) / double(r2g + g2b) + (goods_density[x1.x][x1.y] * g2b_alpha / (goods.size() - goods_vector_index));
+    // return pow(double(value), pow_index) * goods_density[x1.x][x1.y] * g2b_alpha / (double(r2g + g2b) * (goods.size() - goods_vector_index));
 }
 
 void cal_best_path(int robot_index){
@@ -220,12 +237,17 @@ void cal_best_path(int robot_index){
 
 // 机器人管理
 void cal_robot(int zhen){
+    for(int i = 0; i < robot_num; i++){
+        if(zhen < 3000) containers[i] = 2;
+        if(zhen >= 3000 && zhen < 6000) containers[i] = 1.6;
+        if(zhen >= 6000) containers[i] = 1.3;
+    }
     for(int i = 0; i < 4; i++) move_v.push_back(i);
     // shuffle(move_v.begin(), move_v.end(), g_rand);
     // if(zhen != 0 && zhen % 1000 == 0 && extra_dis == 100) {extra_dis -= 50;}
     // if(zhen != 0 && zhen % 500 == 0 && extra_dis == 0) {extra_dis += 50;}
     if(zhen != 0 && zhen % 1000 < 450) {g2b_alpha = 0;}
-    if(zhen != 0 && zhen % 1000 > 450) {g2b_alpha = 0.007;}
+    if(zhen != 0 && zhen % 1000 > 450) {g2b_alpha = 0;}
     if(zhen != 0 && zhen % 1000 < 450) {b2g_alpha = 0;}
     if(zhen != 0 && zhen % 1000 > 450) {b2g_alpha = 0.003;}
     vector<thread> threads;
@@ -256,8 +278,22 @@ void cal_robot(int zhen){
                 if(robot[j].goods != 0) continue;
                 int select = select2best_point(robot[i].best_goods[0], robot[j].best_goods[0], pow_index_base);
                 if(select == 0) continue;
-                else if(select == 1) {robot[i].best_goods.erase(robot[i].best_goods.begin()); flg = 1; break;}
-                else if(select == 2) {robot[j].best_goods.erase(robot[j].best_goods.begin()); flg = 1; break;}
+                else if(select == 1) {
+                    if(robot[i].best_goods.size() == 1 && robot[j].best_goods.size() != 1)
+                        robot[j].best_goods.erase(robot[j].best_goods.begin());
+                    else
+                        robot[i].best_goods.erase(robot[i].best_goods.begin());
+                    flg = 1;
+                    break;
+                }
+                else if(select == 2) {
+                    if(robot[j].best_goods.size() == 1 && robot[i].best_goods.size() != 1)
+                        robot[i].best_goods.erase(robot[i].best_goods.begin());
+                    else
+                        robot[j].best_goods.erase(robot[j].best_goods.begin());
+                    flg = 1;
+                    break;
+                }
             }
         }
     }
@@ -440,6 +476,14 @@ void Init_map_dis(){
 			}
 		}
 	}
+    for(int i = 0; i < robot_num; i++) containers.push_back(1.3);
+    // for(int i = 0; i < robot_num; i++){
+    //     int tmp_dis = 10000;
+    //     for(int j = 0; j < berth_num; j++){
+    //         tmp_dis = min(tmp_dis, map_dis[robot[i].x][robot[i].y][j]);
+    //     }
+    //     robot[i].dis = tmp_dis;
+    // }
 }
 
 

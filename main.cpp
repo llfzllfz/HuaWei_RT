@@ -11,21 +11,7 @@ const int berth_num = 10;
 const int boat_num = 5;
 
 
-struct Goods{
-    int x, y;
-    int money;
-    int time;
-    Goods(){}
-    Goods(int startx, int starty, int startmoney, int starttime){
-        x = startx;
-        y = starty;
-        money = startmoney;
-        time = starttime;
-    }
-};
 
-vector<Goods> goods;
-int goods_vector_index = 0;
 
 
 int money, boat_capacity, id;
@@ -62,6 +48,11 @@ int Input()
         ch_goods[x][y] = 'g';
         goods_value_mp[int2str(x, y)] = val;
         goods_time_mp[int2str(x, y)] = id;
+        for(int i = max(0, x - 30); i < min(N, x + 30); i++){
+            for(int j = max(0, y - 30); j < min(N, j + 30); j++){
+                goods_density[i][j]++;
+            }
+        }
     }
     read_robot();
     read_boat();
@@ -73,10 +64,17 @@ int Input()
 
 void Synchronize(int zhen){
     while(goods_vector_index < goods.size() and goods[goods_vector_index].time - zhen + 1 > 1000){
+        int x = goods[goods_vector_index].x;
+        int y = goods[goods_vector_index].y;
         ch_copy[goods[goods_vector_index].x][goods[goods_vector_index].y] = ch[goods[goods_vector_index].x][goods[goods_vector_index].y];
         ch_goods[goods[goods_vector_index].x][goods[goods_vector_index].y] = ch[goods[goods_vector_index].x][goods[goods_vector_index].y];
         goods_value_mp.erase(int2str(goods[goods_vector_index].x, goods[goods_vector_index].y));
         goods_vector_index++;
+        for(int i = max(0, x - 30); i < min(N, x + 30); i++){
+            for(int j = max(0, y - 30); j < min(N, j + 30); j++){
+                goods_density[i][j]--;
+            }
+        }
     }
 }
 
