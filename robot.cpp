@@ -111,7 +111,7 @@ void bfs_find_goods(int robot_index, int zhen, double pow_index){
                             bestPoint.pre_dis = robot[robot_index].dis;
                         }
                     }
-                    if(double(bestPoint.dis + bestPoint.pre_dis) < containers[robot_index] * double(bestPoint.goods2berth_dis))
+                    if(bestPoint.x != -1 && double(bestPoint.dis + bestPoint.pre_dis) < containers[robot_index] * double(bestPoint.goods2berth_dis))
                         robot[robot_index].best_goods.push_back(bestPoint);
                 }
                 if(bestPoint.x == -1) continue;
