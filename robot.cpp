@@ -237,11 +237,12 @@ void cal_best_path(int robot_index){
 
 // 机器人管理
 void cal_robot(int zhen){
-    for(int i = 0; i < robot_num; i++){
-        if(zhen < 3000) containers[i] = 2;
-        if(zhen >= 3000 && zhen < 6000) containers[i] = 1.6;
-        if(zhen >= 6000) containers[i] = 1.3;
-    }
+    // for(int i = 0; i < robot_num; i++){
+    //     if(containers[i] > 2) continue;
+    //     if(zhen < 3000) containers[i] = 2;
+    //     if(zhen >= 3000 && zhen < 6000) containers[i] = 1.6;
+    //     if(zhen >= 6000) containers[i] = 1.3;
+    // }
     for(int i = 0; i < 4; i++) move_v.push_back(i);
     // shuffle(move_v.begin(), move_v.end(), g_rand);
     // if(zhen != 0 && zhen % 1000 == 0 && extra_dis == 100) {extra_dis -= 50;}
@@ -262,6 +263,9 @@ void cal_robot(int zhen){
     for(auto& t : threads){
         t.join();
     }
+    // for(int i = 0; i < robot_num; i++){
+    //     containers[i] = -1;
+    // }
     int flg = 1;
     while(flg){
         flg = 0;
@@ -305,6 +309,10 @@ void cal_robot(int zhen){
         cal_best_path(i);
     }
 
+    for(int i = 0; i < robot_num; i++){
+        if(robot[i].best_goods.empty() && (goods.size() - goods_vector_index) > 10) containers[i] *= 2;
+        // cerr << containers[i] << endl;
+    }
 
     vector<Robot_ans> v;
     for(int i = 0; i < robot_num; i++){
@@ -356,6 +364,12 @@ void cal_robot(int zhen){
                 ch_copy[next_x][next_y] = ch[next_x][next_y];
                 robot[i].dis = 0;
                 robot[i].goods_values = goods_value_mp[int2str(next_x, next_y)];
+                // for(int i = 0; i < robot_num; i++){
+                if(containers[i] <= 0) continue;
+                if(zhen < 3000) containers[i] = 2;
+                if(zhen >= 3000 && zhen < 6000) containers[i] = 1.6;
+                if(zhen >= 6000) containers[i] = 1.3;
+                // }
             }
         }
         else{
@@ -367,6 +381,10 @@ void cal_robot(int zhen){
                 berth[robot[i].berth].goods_num = berth[robot[i].berth].goods_num + 1;
                 robot[i].dis = 0;
                 berth[robot[i].berth].goods_values = berth[robot[i].berth].goods_values + robot[i].goods_values;
+                if(containers[i] <= 0) continue;
+                if(zhen < 3000) containers[i] = 2;
+                if(zhen >= 3000 && zhen < 6000) containers[i] = 1.6;
+                if(zhen >= 6000) containers[i] = 1.3;
             }
         }
     }
@@ -476,7 +494,7 @@ void Init_map_dis(){
 			}
 		}
 	}
-    for(int i = 0; i < robot_num; i++) containers.push_back(1.3);
+    for(int i = 0; i < robot_num; i++) containers.push_back(2);
     // for(int i = 0; i < robot_num; i++){
     //     int tmp_dis = 10000;
     //     for(int j = 0; j < berth_num; j++){
